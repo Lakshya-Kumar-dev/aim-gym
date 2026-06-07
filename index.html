@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aim - Premium Fitness Tracker</title>
+    <style>
+        :root {
+            --bg-dark: #09090b;
+            --bg-card: rgba(24, 24, 27, 0.7);
+            --primary: #00f2fe;
+            --primary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --accent: #10b981;
+            --accent-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --water: #3b82f6;
+            --danger: #ef4444;
+            --text-main: #f8fafc;
+            --text-muted: #a1a1aa;
+            --border: rgba(255, 255, 255, 0.1);
+            --glass: rgba(15, 23, 42, 0.6);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', -apple-system, sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(79, 172, 254, 0.1) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(0, 242, 254, 0.05) 0px, transparent 50%);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+
+        #app-container { width: 100%; max-width: 480px; position: relative; padding-bottom: 90px; min-height: 100vh; }
+
+        header {
+            padding: 24px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        h1.logo { font-size: 28px; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 3px; text-transform: uppercase; font-weight: 800; }
+
+        button { background: var(--primary-gradient); color: #000; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0, 242, 254, 0.4); }
+
+        button.water-btn { background: rgba(59, 130, 246, 0.2); color: var(--water); border: 1px solid var(--water); box-shadow: none; padding: 8px 12px; }
+        button.water-btn:hover { background: var(--water); color: #fff; }
+        button.success-btn { background: var(--accent-gradient); color: #fff; padding: 6px 12px; font-size: 12px; box-shadow: none; }
+        
+        button.danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); box-shadow: none; border: 1px solid rgba(239, 68, 68, 0.2); padding: 8px 12px; }
+        button.danger:hover { background: var(--danger); color: #fff; }
+        button.close-btn { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; font-weight: bold; width: 32px; height: 32px; border-radius: 8px; display: flex; justify-content: center; align-items: center; padding: 0; box-shadow: none; }
+        button.close-btn:hover { background: var(--danger); color: #fff; }
+
+        button.outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); box-shadow: none; }
+
+        .view { display: none; padding: 20px; animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .view.active { display: block; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Cards & Inputs */
+        .card { background: var(--bg-card); backdrop-filter: blur(10px); padding: 24px; border-radius: 16px; margin-bottom: 24px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2 { font-size: 20px; margin-bottom: 20px; font-weight: 600; }
+        h3 { font-size: 14px; margin-bottom: 15px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;}
+        label { display: block; margin-bottom: 8px; font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        input, select { width: 100%; padding: 14px; margin-bottom: 20px; background-color: rgba(0,0,0,0.2); border: 1px solid var(--border); color: var(--text-main); border-radius: 10px; font-size: 16px; transition: all 0.2s; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 10px rgba(0, 242, 254, 0.1); }
+        .flex-row { display: flex; gap: 15px; justify-content: space-between; align-items: center;}
+        .flex-row > div { flex: 1; }
+
+        /* Goal Progress Bars */
+        .muscle-progress { background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 12px; }
+        .muscle-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-weight: 600; font-size: 15px;}
+        .goal-label-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .goal-feedback { font-size: 12px; color: var(--text-muted); margin-top: 10px; line-height: 1.4; }
+        .goal-feedback.optimal { color: var(--accent); font-weight: 600; }
+
+        .progress-bar-bg { background-color: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; margin-bottom: 12px; }
+        .progress-bar-fill { height: 100%; width: 0%; transition: width 0.8s ease; }
+        .progress-bar-fill.overall { background: var(--primary-gradient); }
+        .progress-bar-fill.daily { background: var(--accent-gradient); }
+        .progress-bar-fill.water { background: var(--water); height: 10px; }
+
+        .achieved-badge { background: rgba(16, 185, 129, 0.1); color: var(--accent); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid var(--accent); display: inline-block; margin: 4px; }
+        .summary-box { background: rgba(0, 242, 254, 0.05); border: 1px solid var(--primary); padding: 15px; border-radius: 12px; text-align: center; margin-top: 20px; }
+
+        /* History Accordions */
+        .day-group { margin-bottom: 15px; border-radius: 12px; overflow: hidden; background: rgba(0,0,0,0.2); border: 1px solid var(--border); }
+        .day-header { padding: 16px; background: rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--primary); transition: background 0.2s; }
+        .day-header:hover { background: rgba(255,255,255,0.1); }
+        .day-content { display: none; padding: 16px; border-top: 1px solid var(--border); }
+        .day-content.open { display: block; }
+        .day-icon { font-size: 12px; transition: transform 0.3s; }
+        .day-header.open .day-icon { transform: rotate(90deg); }
+
+        /* Logs & Data */
+        .log-item { background: var(--bg-card); border-left: 4px solid var(--primary); padding: 16px; margin-bottom: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); border-right: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+        .log-item:last-child { margin-bottom: 0; }
+        .log-details h4 { font-size: 16px; margin-bottom: 6px; }
+        .trained-badge { display: inline-block; background: rgba(16, 185, 129, 0.1); color: var(--accent); padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; border: 1px solid rgba(16, 185, 129, 0.2); margin-top: 4px; }
+
+        .macro-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; background: rgba(0,0,0,0.2); padding: 16px; border-radius: 12px; text-align: center; border: 1px solid var(--border); }
+        .macro-item span { display: block; font-size: 11px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;}
+        .macro-item strong { font-size: 16px; color: var(--primary); }
+
+        /* Navigation */
+        nav { position: fixed; bottom: 0; width: 100%; max-width: 480px; background: rgba(11, 17, 32, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); display: flex; justify-content: space-around; padding: 16px 0; border-top: 1px solid var(--border); z-index: 100; }
+        nav button { background: transparent; color: var(--text-muted); border-radius: 0; padding: 8px 12px; font-size: 12px; box-shadow: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        nav button.active { color: var(--primary); }
+        nav button.active::after { content: ''; display: block; width: 20px; height: 3px; background: var(--primary-gradient); border-radius: 3px; margin-top: 4px; }
+
+        .checkbox-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 14px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="app-container">
+    <header>
+        <h1 class="logo">Aim</h1>
+    </header>
+
+    <!-- DASHBOARD / HOME VIEW -->
+    <main id="view-home" class="view active">
+        <!-- WATER TRACKER -->
+        <div class="card">
+            <div class="flex-row" style="margin-bottom: 10px;">
+                <h2>💧 Hydration</h2>
+                <span style="font-size: 14px; font-weight: 600;"><span id="water-current-text">0</span> / 3000 ml</span>
+            </div>
+            <div class="progress-bar-bg" style="height: 10px;"><div class="progress-bar-fill water" id="water-progress-bar"></div></div>
+            <div class="flex-row" style="margin-top: 15px;">
+                <button class="water-btn" onclick="addWater(250)">+ 250 ml</button>
+                <button class="water-btn" onclick="addWater(500)">+ 500 ml</button>
+            </div>
+        </div>
+
+        <!-- MUSCLE GROWTH GOALS -->
+        <div class="card" id="goal-display-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2>Active Targets</h2>
+                <button class="outline" style="padding: 6px 12px; font-size: 12px;" onclick="toggleGoalSetup()">Add Goals</button>
+            </div>
+            
+            <div id="active-goals-container"></div>
+
+            <div class="summary-box">
+                <label>🔥 Workout Intensity Today</label>
+                <h3 style="color: #fff; margin: 5px 0 0 0; font-size: 18px;">~<span id="calories-burned">0</span> Kcal Burned</h3>
+            </div>
+        </div>
+
+        <!-- Goal Setup UI -->
+        <div class="card" id="goal-setup-card" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin: 0;">Set Growth Targets</h2>
+                <button class="close-btn" onclick="toggleGoalSetup()">X</button>
+            </div>
+            
+            <div class="checkbox-grid">
+                <label class="checkbox-label"><input type="checkbox" value="Biceps" class="goal-cb"> Biceps</label>
+                <label class="checkbox-label"><input type="checkbox" value="Triceps" class="goal-cb"> Triceps</label>
+                <label class="checkbox-label"><input type="checkbox" value="Chest" class="goal-cb"> Chest</label>
+                <label class="checkbox-label"><input type="checkbox" value="Back" class="goal-cb"> Back</label>
+                <label class="checkbox-label"><input type="checkbox" value="Forearms" class="goal-cb"> Forearms</label>
+                <label class="checkbox-label"><input type="checkbox" value="Quads" class="goal-cb"> Quads / Legs</label>
+                <label class="checkbox-label"><input type="checkbox" value="Shoulders" class="goal-cb"> Shoulders</label>
+                <label class="checkbox-label"><input type="checkbox" value="Full Body" class="goal-cb"> Full Body</label>
+            </div>
+            <button style="width: 100%; margin-top: 10px;" onclick="saveGoals()">Save Targets</button>
+        </div>
+
+        <!-- ACHIEVED SECTION -->
+        <div id="achieved-goals-section" style="display: none; margin-bottom: 20px;">
+            <h3>🏆 Achieved Goals</h3>
+            <div id="achieved-goals-container"></div>
+        </div>
+
+        <h3>Recent Activity</h3>
+        <div id="recent-activity-list" style="margin-top: 15px;"></div>
+    </main>
+
+    <!-- HOME WORKOUT VIEW -->
+    <main id="view-homeworkout" class="view">
+        <div class="card">
+            <h2>Log Home Workout</h2>
+            <label>Equipment Used</label>
+            <select id="hw-equipment" onchange="updateHomeSubOptions()">
+                <option value="">Select Equipment...</option>
+                <option value="Dumbbell">Dumbbell</option>
+                <option value="Handgripper">Handgripper</option>
+                <option value="Bodyweight">Bodyweight (No Weights Needed)</option>
+                <option value="Cardio">Cardio / Running</option>
+            </select>
+
+            <div id="hw-sub-container" style="display:none;">
+                <label>Specific Exercise</label>
+                <select id="hw-exercise" onchange="updateInputVisibility('hw')"></select>
+            </div>
+
+            <div id="hw-muscle-container" style="display:none; margin-bottom: 15px;">
+                <span class="trained-badge" id="hw-muscle-tag">🎯 Target Muscle</span>
+            </div>
+
+            <div class="flex-row">
+                <div id="hw-weight-container">
+                    <label>Weight (kg)</label>
+                    <input type="number" id="hw-weight" placeholder="e.g. 10" min="0">
+                </div>
+                <div id="hw-reps-container">
+                    <label id="hw-reps-label">Reps (1 set)</label>
+                    <input type="number" id="hw-reps" placeholder="e.g. 12" min="1">
+                </div>
+            </div>
+            
+            <label>Personal Record (PR) / Notes</label>
+            <input type="text" id="hw-pr" placeholder="e.g. Felt easy today!">
+
+            <button style="width: 100%;" onclick="saveWorkout('home')">Log Exercise</button>
+        </div>
+        <h3>Home Workout History (By Days)</h3>
+        <div id="home-log-list"></div>
+    </main>
+
+    <!-- GYM VIEW -->
+    <main id="view-gym" class="view">
+        <div class="card">
+            <h2>Log Gym Workout</h2>
+            <label>Equipment / Exercise</label>
+            <select id="gym-exercise" onchange="updateInputVisibility('gym')">
+                <option value="">Select Gym Exercise...</option>
+            </select>
+
+            <div id="gym-muscle-container" style="display:none; margin-bottom: 15px;">
+                <span class="trained-badge" id="gym-muscle-tag">🎯 Target Muscle</span>
+            </div>
+
+            <div class="flex-row">
+                <div id="gym-weight-container">
+                    <label>Weight (kg)</label>
+                    <input type="number" id="gym-weight" placeholder="e.g. 60" min="0">
+                </div>
+                <div>
+                    <label id="gym-reps-label">Reps (1 Set)</label>
+                    <input type="number" id="gym-reps" placeholder="e.g. 8" min="1">
+                </div>
+            </div>
+
+            <button style="width: 100%;" onclick="saveWorkout('gym')">Log Gym Set</button>
+        </div>
+        <h3>Gym History (By Days)</h3>
+        <div id="gym-log-list"></div>
+    </main>
+
+    <!-- KITCHEN VIEW -->
+    <main id="view-kitchen" class="view">
+        <div class="card">
+            <h2>Kitchen Tracker</h2>
+            <label>Food Item</label>
+            <input type="text" id="food-name" list="food-presets" placeholder="e.g. Eggs, Chapati, Rice with Ghee..." oninput="calculateMacros()">
+            <datalist id="food-presets"></datalist>
+
+            <div class="flex-row">
+                <div>
+                    <label>Quantity</label>
+                    <input type="number" id="food-qty" value="1" min="0.1" step="0.1" oninput="calculateMacros()">
+                </div>
+                <div>
+                    <label>Unit</label>
+                    <select id="food-unit" onchange="calculateMacros()">
+                        <option value="pieces">Pieces / Pkts</option>
+                        <option value="grams">Grams</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="macro-grid">
+                <div class="macro-item"><span>Calories</span><strong id="m-cal">0</strong></div>
+                <div class="macro-item"><span>Protein</span><strong id="m-pro">0g</strong></div>
+                <div class="macro-item"><span>Carbs</span><strong id="m-carb">0g</strong></div>
+                <div class="macro-item"><span>Fats</span><strong id="m-fat">0g</strong></div>
+            </div>
+
+            <button style="width: 100%;" onclick="saveFood()">Log Nutrition</button>
+        </div>
+        <h3>Nutrition History (By Days)</h3>
+        <div id="kitchen-log-list"></div>
+    </main>
+
+    <nav>
+        <button id="nav-home" class="active" onclick="switchView('home')">Home</button>
+        <button id="nav-homeworkout" onclick="switchView('homeworkout')">Home Gym</button>
+        <button id="nav-gym" onclick="switchView('gym')">Iron Gym</button>
+        <button id="nav-kitchen" onclick="switchView('kitchen')">Kitchen</button>
+    </nav>
+</div>
+
+<script>
+    // --- DATABASE ---
+    const homeDb = {
+        "Dumbbell": [
+            { name: "Hammer Curls", muscle: "Biceps", type: "weights" },
+            { name: "Reverse Wrist Curls", muscle: "Forearms", type: "weights" },
+            { name: "Wrist Curls", muscle: "Forearms", type: "weights" },
+            { name: "Bicep Curls", muscle: "Biceps", type: "weights" },
+            { name: "Overhead Press", muscle: "Shoulders", type: "weights" },
+            { name: "Dumbbell Flyes", muscle: "Chest", type: "weights" }
+        ],
+        "Handgripper": [
+            { name: "Standard Squeeze", muscle: "Forearms", type: "weights" },
+            { name: "Hold (Isometric)", muscle: "Forearms", type: "weights" }
+        ],
+        "Bodyweight": [
+            { name: "Push ups (Standard)", muscle: "Chest", type: "bodyweight" },
+            { name: "Push ups (Wide)", muscle: "Chest", type: "bodyweight" },
+            { name: "Push ups (Diamond)", muscle: "Triceps", type: "bodyweight" },
+            { name: "Push ups (Incline)", muscle: "Chest", type: "bodyweight" },
+            { name: "Push ups (Decline)", muscle: "Chest", type: "bodyweight" },
+            { name: "Pull ups (Standard)", muscle: "Back", type: "bodyweight" },
+            { name: "Pull ups (Wide Grip)", muscle: "Back", type: "bodyweight" },
+            { name: "Chin ups", muscle: "Biceps", type: "bodyweight" },
+            { name: "Muscle ups", muscle: "Full Body", type: "bodyweight" },
+            { name: "Squats (Free)", muscle: "Quads", type: "bodyweight" },
+            { name: "Burpees", muscle: "Full Body", type: "cardio" }
+        ],
+        "Cardio": [
+            { name: "Running", muscle: "Quads", type: "cardio" },
+            { name: "Jump Rope", muscle: "Full Body", type: "cardio" }
+        ]
+    };
+
+    const gymDb = [
+        { name: "Bench Press (Barbell)", muscle: "Chest", type: "weights" },
+        { name: "Squat (Rack)", muscle: "Quads", type: "weights" },
+        { name: "Deadlift", muscle: "Full Body", type: "weights" },
+        { name: "Lat Pulldown Machine", muscle: "Back", type: "weights" },
+        { name: "Leg Press Machine", muscle: "Quads", type: "weights" },
+        { name: "Pull ups (Assisted/Free)", muscle: "Back", type: "bodyweight" },
+        { name: "Cable Crossover", muscle: "Chest", type: "weights" },
+        { name: "Pec Deck Machine", muscle: "Chest", type: "weights" },
+        { name: "Bicep Curls (Cable)", muscle: "Biceps", type: "weights" },
+        { name: "Tricep Pushdown", muscle: "Triceps", type: "weights" }
+    ];
+
+    const foodDb = {
+        "egg": { type: "piece", cal: 78, pro: 6.3, carb: 0.6, fat: 5.3 },
+        "chapati": { type: "piece", cal: 104, pro: 3.0, carb: 22.0, fat: 0.4 },
+        "white rice (cooked)": { type: "gram", cal: 130, pro: 2.7, carb: 28.0, fat: 0.3 },
+        "white rice (cooked with ghee)": { type: "gram", cal: 200, pro: 2.7, carb: 28.0, fat: 8.0 },
+        "mutton (goat meat)": { type: "gram", cal: 143, pro: 26.0, carb: 0.0, fat: 3.0 },
+        "cucumber": { type: "gram", cal: 15, pro: 0.6, carb: 3.6, fat: 0.1 },
+        "maggi (1 packet)": { type: "piece", cal: 350, pro: 8.0, carb: 50.0, fat: 13.0 },
+        "oreo (1 piece)": { type: "piece", cal: 53, pro: 0.5, carb: 8.3, fat: 2.1 },
+        "chicken breast": { type: "gram", cal: 165, pro: 31.0, carb: 0.0, fat: 3.6 },
+        "paneer": { type: "gram", cal: 265, pro: 18.0, carb: 1.2, fat: 20.0 },
+        "dal (cooked)": { type: "gram", cal: 116, pro: 9.0, carb: 20.0, fat: 0.4 },
+        "whey protein (1 scoop)": { type: "piece", cal: 120, pro: 24.0, carb: 3.0, fat: 1.5 }
+    };
+
+    // --- STATE ---
+    let logs = JSON.parse(localStorage.getItem('aim_premium_logs')) || [];
+    let activeGoals = JSON.parse(localStorage.getItem('aim_targets')) || ["Biceps", "Forearms"];
+    let achievedGoals = JSON.parse(localStorage.getItem('aim_achieved_goals')) || [];
+    let goalStartDates = JSON.parse(localStorage.getItem('aim_goal_starts')) || {};
+    let waterData = JSON.parse(localStorage.getItem('aim_water')) || { date: new Date().toDateString(), amount: 0 };
+    
+    // Constants for Targets
+    const DAILY_SETS_GOAL = 6; 
+    const OVERALL_SETS_GOAL = 100; // Overall milestone
+
+    // --- INIT ---
+    function init() {
+        populateFoodPresets();
+        populateGymPresets();
+        checkNewDay();
+        syncGoalStartDates();
+        renderAllLogs();
+        updateDashboard();
+    }
+
+    function checkNewDay() {
+        const today = new Date().toDateString();
+        if (waterData.date !== today) {
+            waterData = { date: today, amount: 0 };
+            localStorage.setItem('aim_water', JSON.stringify(waterData));
+        }
+    }
+
+    function syncGoalStartDates() {
+        let changed = false;
+        activeGoals.forEach(g => {
+            if (!goalStartDates[g]) {
+                goalStartDates[g] = new Date().toISOString();
+                changed = true;
+            }
+        });
+        if (changed) localStorage.setItem('aim_goal_starts', JSON.stringify(goalStartDates));
+    }
+
+    // --- NAVIGATION ---
+    function switchView(viewId) {
+        document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+        document.getElementById('view-' + viewId).classList.add('active');
+        document.getElementById('nav-' + viewId).classList.add('active');
+        updateDashboard();
+    }
+
+    // --- ACCORDION LOGIC ---
+    function toggleDayContent(id) {
+        const header = document.getElementById('day-header-' + id);
+        const content = document.getElementById('day-content-' + id);
+        if (content.classList.contains('open')) {
+            content.classList.remove('open');
+            header.classList.remove('open');
+        } else {
+            content.classList.add('open');
+            header.classList.add('open');
+        }
+    }
+
+    // --- GOALS AND DASHBOARD LOGIC ---
+    function addWater(amount) {
+        waterData.amount += amount;
+        localStorage.setItem('aim_water', JSON.stringify(waterData));
+        updateDashboard();
+    }
+
+    function toggleGoalSetup() {
+        const setup = document.getElementById('goal-setup-card');
+        const display = document.getElementById('goal-display-card');
+        
+        if (setup.style.display === 'none') {
+            setup.style.display = 'block';
+            display.style.display = 'none';
+            // Sync checkboxes when opening
+            document.querySelectorAll('.goal-cb').forEach(cb => cb.checked = activeGoals.includes(cb.value));
+        } else {
+            setup.style.display = 'none';
+            display.style.display = 'block';
+        }
+    }
+
+    function saveGoals() {
+        const selected = Array.from(document.querySelectorAll('.goal-cb:checked')).map(cb => cb.value);
+        if(selected.length === 0) return alert("Select at least one muscle target.");
+        
+        // Preserve start dates for kept goals, create new for new goals
+        const newStarts = {};
+        selected.forEach(g => newStarts[g] = goalStartDates[g] || new Date().toISOString());
+        
+        goalStartDates = newStarts;
+        localStorage.setItem('aim_goal_starts', JSON.stringify(goalStartDates));
+
+        activeGoals = selected;
+        localStorage.setItem('aim_targets', JSON.stringify(activeGoals));
+        
+        toggleGoalSetup();
+        updateDashboard();
+    }
+
+    function markAchieved(muscle) {
+        // Remove from active
+        activeGoals = activeGoals.filter(g => g !== muscle);
+        
+        // Add to Achieved list
+        if (!achievedGoals.includes(muscle)) achievedGoals.push(muscle);
+        
+        // **RESET OVERALL LOGIC**: Delete the start date. 
+        // If re-added later, it starts with 0 sets.
+        delete goalStartDates[muscle];
+
+        localStorage.setItem('aim_targets', JSON.stringify(activeGoals));
+        localStorage.setItem('aim_achieved_goals', JSON.stringify(achievedGoals));
+        localStorage.setItem('aim_goal_starts', JSON.stringify(goalStartDates));
+        
+        updateDashboard();
+    }
+
+    function updateDashboard() {
+        const today = new Date().toDateString();
+        
+        // Hydration
+        document.getElementById('water-current-text').innerText = waterData.amount;
+        document.getElementById('water-progress-bar').style.width = Math.min((waterData.amount / 3000) * 100, 100) + '%';
+
+        // Cals burned today
+        const todaysWorkouts = logs.filter(l => (l.category === 'home' || l.category === 'gym') && new Date(l.date).toDateString() === today);
+        let calsBurned = 0;
+        todaysWorkouts.forEach(w => { calsBurned += (w.workoutType === 'cardio') ? 30 : 15; });
+        document.getElementById('calories-burned').innerText = calsBurned;
+
+        // Render Goals (Dual Bars)
+        const activeContainer = document.getElementById('active-goals-container');
+        activeContainer.innerHTML = activeGoals.length === 0 ? "<p style='font-size: 13px; color: var(--text-muted);'>No active targets. Click 'Add Goals'.</p>" : "";
+
+        activeGoals.forEach(goal => {
+            const startDate = new Date(goalStartDates[goal]);
+            
+            // Overall sets since goal was added/reset
+            const overallSetsDone = logs.filter(w => (w.category === 'home' || w.category === 'gym') && w.muscle === goal && new Date(w.date) >= startDate).length;
+            // Daily sets today
+            const dailySetsDone = todaysWorkouts.filter(w => w.muscle === goal).length;
+
+            const dailyPct = Math.min((dailySetsDone / DAILY_SETS_GOAL) * 100, 100);
+            const overallPct = Math.min((overallSetsDone / OVERALL_SETS_GOAL) * 100, 100);
+
+            const feedback = dailySetsDone >= DAILY_SETS_GOAL 
+                ? `<span class="goal-feedback optimal">🔥 Optimal daily volume reached! Keep pushing!</span>`
+                : `Daily Tracker: Need <b>${DAILY_SETS_GOAL - dailySetsDone} more sets</b> today.`;
+
+            activeContainer.innerHTML += `
+                <div class="muscle-progress">
+                    <div class="muscle-header">
+                        <span>🎯 ${goal}</span>
+                    </div>
+
+                    <!-- Daily Bar -->
+                    <div class="goal-label-row">
+                        <span>Daily Progress</span>
+                        <span>${dailySetsDone} / ${DAILY_SETS_GOAL}</span>
+                    </div>
+                    <div class="progress-bar-bg" style="height: 6px;">
+                        <div class="progress-bar-fill daily" style="width: ${dailyPct}%"></div>
+                    </div>
+
+                    <!-- Overall Bar -->
+                    <div class="goal-label-row" style="margin-top: 10px;">
+                        <span style="color: var(--primary);">Overall Progress</span>
+                        <span style="color: var(--primary);">${overallSetsDone} / ${OVERALL_SETS_GOAL}</span>
+                    </div>
+                    <div class="progress-bar-bg" style="height: 8px;">
+                        <div class="progress-bar-fill overall" style="width: ${overallPct}%"></div>
+                    </div>
+
+                    <p class="goal-feedback">${feedback}</p>
+                    
+                    ${overallSetsDone >= OVERALL_SETS_GOAL ? `
+                        <div style="text-align: right; margin-top: 10px;">
+                            <button class="success-btn" onclick="markAchieved('${goal}')">Goal Achieved ✔</button>
+                        </div>
+                    ` : `
+                        <div style="text-align: right; margin-top: 10px;">
+                            <button class="outline" style="font-size: 11px; padding: 4px 8px;" onclick="markAchieved('${goal}')">Retire Goal</button>
+                        </div>
+                    `}
+                </div>`;
+        });
+
+        // Achieved section
+        const achSection = document.getElementById('achieved-goals-section');
+        const achContainer = document.getElementById('achieved-goals-container');
+        if (achievedGoals.length > 0) {
+            achSection.style.display = 'block';
+            achContainer.innerHTML = achievedGoals.map(g => `<span class="achieved-badge">🏆 ${g} Built</span>`).join('');
+        } else { achSection.style.display = 'none'; }
+
+        // Recent Activity
+        const recentDiv = document.getElementById('recent-activity-list');
+        recentDiv.innerHTML = logs.length === 0 ? "<p style='color:var(--text-muted); font-size:13px;'>No activity yet.</p>" : "";
+        logs.slice().reverse().slice(0, 4).forEach(log => {
+            let icon = log.category === 'kitchen' ? '🍳' : '⚡';
+            recentDiv.innerHTML += `
+                <div class="log-item"><div class="log-details" style="width:100%">
+                    <div style="display:flex; justify-content:space-between;"><h4>${icon} ${log.name}</h4><span style="font-size:11px; color:var(--text-muted)">${new Date(log.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span></div>
+                    ${log.muscle ? `<span class="trained-badge">🎯 ${log.muscle}</span>` : ''}
+                </div></div>`;
+        });
+    }
+
+    // --- DYNAMIC INPUT LOGIC ---
+    function populateGymPresets() {
+        const select = document.getElementById('gym-exercise');
+        gymDb.forEach(ex => select.innerHTML += `<option value="${ex.name}" data-muscle="${ex.muscle}" data-type="${ex.type}">${ex.name}</option>`);
+    }
+
+    function updateHomeSubOptions() {
+        const eq = document.getElementById('hw-equipment').value;
+        const exSelect = document.getElementById('hw-exercise');
+        const subContainer = document.getElementById('hw-sub-container');
+        
+        if (eq && homeDb[eq]) {
+            subContainer.style.display = 'block';
+            exSelect.innerHTML = '<option value="">Select Exercise...</option>' + 
+                homeDb[eq].map(ex => `<option value="${ex.name}" data-muscle="${ex.muscle}" data-type="${ex.type}">${ex.name}</option>`).join('');
+        } else {
+            subContainer.style.display = 'none';
+        }
+        updateInputVisibility('hw');
+    }
+
+    function updateInputVisibility(prefix) {
+        const select = document.getElementById(prefix + '-exercise');
+        const muscleContainer = document.getElementById(prefix + '-muscle-container');
+        const muscleTag = document.getElementById(prefix + '-muscle-tag');
+        const weightContainer = document.getElementById(prefix + '-weight-container');
+        const repsLabel = document.getElementById(prefix + '-reps-label');
+        const repsInput = document.getElementById(prefix + '-reps');
+
+        if (select.selectedIndex <= 0) {
+            muscleContainer.style.display = 'none';
+            weightContainer.style.display = 'block';
+            repsLabel.innerText = "Reps (1 Set)";
+            return;
+        }
+
+        const opt = select.options[select.selectedIndex];
+        const muscle = opt.getAttribute('data-muscle');
+        const type = opt.getAttribute('data-type');
+
+        muscleTag.innerText = `🎯 Trains: ${muscle}`;
+        muscleContainer.style.display = 'block';
+
+        if (type === 'bodyweight') {
+            weightContainer.style.display = 'none';
+            repsLabel.innerText = "Reps (1 Set)";
+            repsInput.placeholder = "e.g. 15";
+        } else if (type === 'cardio') {
+            weightContainer.style.display = 'none';
+            repsLabel.innerText = "Duration (Minutes)";
+            repsInput.placeholder = "e.g. 30";
+        } else {
+            weightContainer.style.display = 'block';
+            repsLabel.innerText = "Reps (1 Set)";
+            repsInput.placeholder = "e.g. 10";
+        }
+    }
+
+    function saveWorkout(category) {
+        let name, repsRaw, extra, muscle, workoutType;
+        const prefix = category === 'home' ? 'hw' : 'gym';
+        
+        const eq = category === 'home' ? document.getElementById('hw-equipment').value : 'Gym';
+        const exSelect = document.getElementById(prefix + '-exercise');
+        
+        if (category === 'home' && !eq) return alert("Select equipment.");
+        if (exSelect.selectedIndex <= 0) return alert("Select an exercise.");
+        
+        const opt = exSelect.options[exSelect.selectedIndex];
+        name = category === 'home' ? `${eq}: ${exSelect.value}` : exSelect.value;
+        muscle = opt.getAttribute('data-muscle');
+        workoutType = opt.getAttribute('data-type');
+        repsRaw = document.getElementById(prefix + '-reps').value;
+        extra = category === 'home' ? document.getElementById('hw-pr').value : "";
+        
+        if(!repsRaw) return alert("Please enter reps or duration.");
+
+        let finalWeight = "";
+        let finalReps = "";
+        
+        if (workoutType === 'cardio') {
+            finalWeight = "Cardio";
+            finalReps = repsRaw + " Mins";
+        } else if (workoutType === 'bodyweight') {
+            finalWeight = "Bodyweight";
+            finalReps = repsRaw + " Reps";
+        } else {
+            const wVal = document.getElementById(prefix + '-weight').value;
+            finalWeight = wVal ? `${wVal} kg` : "0 kg";
+            finalReps = repsRaw + " Reps";
+        }
+
+        logs.push({ id: Date.now(), date: new Date().toISOString(), category: category, name: name, muscle: muscle, workoutType: workoutType, weight: finalWeight, reps: finalReps, pr: extra || "" });
+        saveData();
+        
+        document.getElementById(prefix + '-reps').value = '';
+        if(document.getElementById(prefix + '-weight')) document.getElementById(prefix + '-weight').value = '';
+        if(category === 'home') document.getElementById('hw-pr').value = '';
+    }
+
+    // --- KITCHEN LOGIC ---
+    function populateFoodPresets() {
+        const datalist = document.getElementById('food-presets');
+        Object.keys(foodDb).forEach(food => datalist.innerHTML += `<option value="${food}">`);
+    }
+
+    let currentCalculatedMacros = { cal: 0, pro: 0, carb: 0, fat: 0 };
+
+    function calculateMacros() {
+        let foodName = document.getElementById('food-name').value.toLowerCase().trim();
+        let qty = parseFloat(document.getElementById('food-qty').value) || 0;
+        let unit = document.getElementById('food-unit').value;
+        
+        currentCalculatedMacros = { cal: 0, pro: 0, carb: 0, fat: 0 };
+        let foodData = foodDb[foodName];
+        
+        if (foodData) {
+            let multiplier = foodData.type === 'piece' ? (unit === 'pieces' ? qty : qty/100) : (unit === 'grams' ? qty/100 : qty);
+            currentCalculatedMacros.cal = foodData.cal * multiplier;
+            currentCalculatedMacros.pro = foodData.pro * multiplier;
+            currentCalculatedMacros.carb = foodData.carb * multiplier;
+            currentCalculatedMacros.fat = foodData.fat * multiplier;
+        }
+
+        document.getElementById('m-cal').innerText = Math.round(currentCalculatedMacros.cal);
+        document.getElementById('m-pro').innerText = currentCalculatedMacros.pro.toFixed(1) + "g";
+        document.getElementById('m-carb').innerText = currentCalculatedMacros.carb.toFixed(1) + "g";
+        document.getElementById('m-fat').innerText = currentCalculatedMacros.fat.toFixed(1) + "g";
+    }
+
+    function saveFood() {
+        const name = document.getElementById('food-name').value;
+        const qty = document.getElementById('food-qty').value;
+        const unit = document.getElementById('food-unit').value;
+
+        if (!name || qty <= 0) return alert("Enter valid food details.");
+        if (currentCalculatedMacros.cal === 0 && !confirm("Food not in database. Log anyway?")) return;
+
+        logs.push({ id: Date.now(), date: new Date().toISOString(), category: 'kitchen', name: `${qty} ${unit} of ${name}`, macros: { ...currentCalculatedMacros } });
+        saveData();
+        
+        document.getElementById('food-name').value = '';
+        document.getElementById('food-qty').value = '1';
+        calculateMacros();
+    }
+
+    // --- DATA RENDERING (ACCORDIONS) ---
+    function saveData() {
+        localStorage.setItem('aim_premium_logs', JSON.stringify(logs));
+        renderAllLogs();
+        updateDashboard();
+    }
+
+    function deleteLog(id) {
+        if (confirm("Delete this entry forever?")) {
+            logs = logs.filter(l => l.id !== id);
+            saveData();
+        }
+    }
+
+    function renderAllLogs() {
+        const renderList = (category, elementId, formatFn) => {
+            const el = document.getElementById(elementId);
+            el.innerHTML = '';
+            
+            const filtered = logs.filter(l => l.category === category).sort((a,b) => b.id - a.id);
+            if(filtered.length === 0) return el.innerHTML = "<p style='color:var(--text-muted); font-size:13px;'>No history found.</p>";
+
+            const grouped = {};
+            filtered.forEach(log => {
+                const dateStr = new Date(log.date).toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' });
+                if(!grouped[dateStr]) grouped[dateStr] = [];
+                grouped[dateStr].push(log);
+            });
+
+            let isFirst = true; 
+            Object.keys(grouped).forEach((dateStr, index) => {
+                const uniqueId = category + '-' + index;
+                const isOpenClass = isFirst ? 'open' : '';
+                
+                const groupHtml = `
+                    <div class="day-group">
+                        <div class="day-header ${isOpenClass}" id="day-header-${uniqueId}" onclick="toggleDayContent('${uniqueId}')">
+                            <span>📅 ${dateStr}</span>
+                            <span class="day-icon">▶</span>
+                        </div>
+                        <div class="day-content ${isOpenClass}" id="day-content-${uniqueId}">
+                            ${grouped[dateStr].map(log => `
+                                <div class="log-item">
+                                    <div class="log-details" style="width:100%">
+                                        <h4>${log.name}</h4>
+                                        ${formatFn(log)}
+                                        ${log.muscle ? `<span class="trained-badge">🎯 ${log.muscle}</span>` : ''}
+                                        <p style="margin-top:8px; font-size: 11px;">${new Date(log.date).toLocaleTimeString()}</p>
+                                    </div>
+                                    <button class="danger" onclick="deleteLog(${log.id})">Del</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                el.innerHTML += groupHtml;
+                isFirst = false;
+            });
+        };
+
+        renderList('gym', 'gym-log-list', l => `<p>${l.weight} | ${l.reps}</p>`);
+        renderList('home', 'home-log-list', l => `<p>${l.weight} | ${l.reps} ${l.pr ? `<br><b style="color:var(--accent)">PR:</b> ${l.pr}` : ''}</p>`);
+        renderList('kitchen', 'kitchen-log-list', l => `<p>${Math.round(l.macros.cal)} Kcal (P: ${l.macros.pro.toFixed(1)}g | C: ${l.macros.carb.toFixed(1)}g)</p>`);
+    }
+
+    init();
+</script>
+</body>
+</html>
